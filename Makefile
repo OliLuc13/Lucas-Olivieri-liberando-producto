@@ -3,7 +3,7 @@ PYTHON 	= $(VENV)/bin/python3
 PIP		= $(VENV)/bin/pip
 
 # Variables used to configure docker images
-IMAGE_REGISTRY_DOCKERHUB 	?= Oliluc13
+IMAGE_REGISTRY_DOCKERHUB 	?= lucasoli13
 IMAGE_REGISTRY_GHCR			?= ghcr.io
 IMAGE_REPO					= lucas-olivieri-liberando-producto
 IMAGE_NAME					?= lucas-olivieri-liberando-producto-imagen
