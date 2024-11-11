@@ -31,6 +31,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        run: make publish
-        env:
-          VERSION: ${{ steps.get_version.outputs.VERSION }}
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}/my-image:${{ env.VERSION }} .
+          docker tag ghcr.io/${{ github.repository }}/my-image:${{ env.VERSION }} ghcr.io/${{ github.repository }}/my-image:latest
+          docker push ghcr.io/${{ github.repository }}/my-image:${{ env.VERSION }}
+          docker push ghcr.io/${{ github.repository }}/my-image:latest
