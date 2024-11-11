@@ -32,7 +32,8 @@ jobs:
       - name: Build and push Docker image
         run: |
           echo "Building and pushing version: ${{ env.VERSION }}"
-          docker build -t ghcr.io/${{ github.repository }}/my-image:${{ env.VERSION }} .
-          docker tag ghcr.io/${{ github.repository }}/my-image:${{ env.VERSION }} ghcr.io/${{ github.repository }}/my-image:latest
-          docker push ghcr.io/${{ github.repository }}/my-image:${{ env.VERSION }}
-          docker push ghcr.io/${{ github.repository }}/my-image:latest
+          docker build -t ghcr.io/oliluc13/lucas-olivieri-liberando-producto/my-image:${{ env.VERSION }} .
+          docker tag ghcr.io/oliluc13/lucas-olivieri-liberando-producto/my-image:${{ env.VERSION }} ghcr.io/oliluc13/lucas-olivieri-liberando-producto/my-image:latest
+          docker push ghcr.io/oliluc13/lucas-olivieri-liberando-producto/my-image:${{ env.VERSION }}
+          docker push ghcr.io/oliluc13/lucas-olivieri-liberando-producto/my-image:latest
+
