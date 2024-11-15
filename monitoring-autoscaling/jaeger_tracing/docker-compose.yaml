@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  jaeger:
+    container_name: jaeger-all-in-one
+    image: jaegertracing/all-in-one:1.52
+    ports:
+      - "6831:6831"
+      - "16686:16686"
+    healthcheck:
+      test: netstat -an | grep 6831 > /dev/null; if [ 0 != $? ]; then exit 1; fi;
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+  mongodb:
+    container_name: mongodb
+    image: bitnami/mongodb:4.4.13-debian-10-r30
+    ports:
+      - "27017:27017"
+    depends_on:
+      jaeger:
+        condition: service_healthy
+    environment:
+      MONGODB_ROOT_PASSWORD: "password"
+    healthcheck:
+      test: mongo --eval "db.adminCommand('ping')" --quiet | grep 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+  web:
+    container_name: fast-api
+    build: .
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGODB_URL: "mongodb://root:password@mongodb:27017"
+      JAEGER_EXPORTER_HOST: "jaeger"
+      JAEGER_EXPORTER_PORT: 6831
+    healthcheck:
+      test: curl --fail http://localhost:8081/health || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s

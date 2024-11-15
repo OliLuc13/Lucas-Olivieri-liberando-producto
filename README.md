@@ -238,7 +238,7 @@ Los requirimientos son los siguientes:
 
 Se deberá entregar mediante un repositorio realizado a partir del original lo siguiente:
 
-- Código de la aplicación y los tests modificados
-- Ficheros para CI/CD configurados y ejemplos de ejecución válidos
-- Ficheros para despliegue y configuración de prometheus de todo lo relacionado con este, así como el dashboard creado exportado a `JSON` para poder reproducirlo
+- Código de la aplicación y los tests modificados - Incluidos en este repositorio. 
+- Ficheros para CI/CD configurados y ejemplos de ejecución válidos - Incluidos en este repositorio. Ejecucion validada en "Actions"
+- Ficheros para despliegue y configuración de prometheus de todo lo relacionado con este, así como el dashboard creado exportado a `JSON` para poder reproducirlo - Todos los ficheros + readme de ejecucion dentro de la carpeta "Monitoring-Autoscaling"
 - `README.md` donde se explique como se ha abordado cada uno de los puntos requeridos en el apartado anterior, con ejemplos prácticos y guía para poder reproducir cada uno de ellos

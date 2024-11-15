@@ -1,0 +1,127 @@
+{{- if ((.Values.mongodb).enabled) -}}
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: mongodb
+  namespace: mongodb
+  labels:
+    {{- include "fast-api-webapp.labels" . | nindent 4 }}
+spec:
+  members: {{ .Values.mongodb.members }}
+  type: ReplicaSet
+  version: {{ .Values.mongodb.version }}
+  {{- if .Values.mongodb.metrics.enabled }}
+  prometheus:
+    # Metrics endpoint HTTP Basic Auth username
+    username: prometheus-username
+    # Metrics endpoint HTTP Basic Auth password
+    passwordSecretRef:
+      name: metrics-endpoint-password
+  {{- end }}
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  users:
+    - name: {{ .Values.mongodb.adminUser }}
+      db: admin
+      passwordSecretRef:
+        name: my-user-password
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: userAdminAnyDatabase
+          db: admin
+        - name: testRole # apply the custom role to the user
+          db: admin
+      scramCredentialsSecretName: my-scram
+    - name: {{ .Values.mongodb.user }}
+      db: college
+      passwordSecretRef:
+        name: my-user-fast-api-password
+      roles:
+        - name: readWrite # apply the custom role to the user
+          db: college
+      scramCredentialsSecretName: my-scram-fast-api
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-user-password
+  namespace: mongodb
+  labels:
+    {{- include "fast-api-webapp.labels" . | nindent 4 }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": pre-upgrade,pre-install
+    "helm.sh/hook-weight": "-5"
+type: Opaque
+stringData:
+  password: {{ .Values.mongodb.password }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-user-fast-api-password
+  namespace: mongodb
+  labels:
+    {{- include "fast-api-webapp.labels" . | nindent 4 }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": pre-upgrade,pre-install
+    "helm.sh/hook-weight": "-5"
+type: Opaque
+stringData:
+  password: {{ .Values.mongodb.password }}
+{{- if .Values.mongodb.metrics.enabled }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: metrics-endpoint-password
+  namespace: mongodb
+  labels:
+    {{- include "fast-api-webapp.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  password: {{ .Values.mongodb.password }}
+  username: prometheus-username
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  annotations:
+  # This needs to match `spec.ServiceMonitorSelector.matchLabels` from your
+  # `prometheuses.monitoring.coreos.com` resouce.
+  labels:
+    release: prometheus
+    {{- include "fast-api-webapp.labels" . | nindent 4 }}
+  name: mongodb-sm
+  namespace: mongodb
+spec:
+  endpoints:
+  # Configuring a Prometheus Endpoint with basic Auth.
+  # `prom-secret` is a Secret containing a `username` and `password` entries.
+  - basicAuth:
+      password:
+        key: password
+        name: metrics-endpoint-password
+      username:
+        key: username
+        name: metrics-endpoint-password
+    # This port matches what we created in our MongoDB Service.
+    port: prometheus
+    # If using HTTPS enabled endpoint, change scheme to https
+    scheme: http
+  # What namespace to watch
+  namespaceSelector:
+    matchNames:
+    - mongodb
+  # Service labels to match
+  selector:
+    matchLabels:
+      app: mongodb-svc
+{{- end }}
+{{- end }}

@@ -1,0 +1,79 @@
+persistence:
+  enabled: true
+
+logstashConfig:
+  logstash.yml: |
+    http.host: 0.0.0.0
+    pipeline.ecs_compatibility: disabled
+    xpack.monitoring.enabled: false
+
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+      tcp {
+        port => 5959
+        codec => json
+      }
+      udp {
+        port => 5960
+        codec => json
+      }
+    }
+    filter {
+    }
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        user => '${ELASTICSEARCH_USERNAME}'
+        cacert => '/usr/share/logstash/config/certs/ca.crt'
+        password => '${ELASTICSEARCH_PASSWORD}'
+        index => "filebeat-%{+YYYY.MM.dd}"
+      }
+      stdout {
+        codec => rubydebug
+      }
+    }
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9600
+      protocol: TCP
+      targetPort: 9600
+    - name: tcp-port
+      port: 5959
+      targetPort: 5959
+    - name: udp-port
+      port: 5960
+      targetPort: 5960
+
+
+extraPorts:
+  - name: http-port
+    containerPort: 9600
+  - name: tcp-port
+    containerPort: 5959
+  - name: udp-port
+    containerPort: 5960
+    protocol: UDP
+
+extraEnvs:
+  - name: "ELASTICSEARCH_USERNAME"
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: username
+  - name: "ELASTICSEARCH_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: password
+
+secretMounts:
+  - name: elasticsearch-master-certs
+    secretName: elasticsearch-master-certs
+    path: /usr/share/logstash/config/certs
